@@ -1,7 +1,10 @@
 
-var gposs = [];
+var gPoss = [];
+var gMap;
+var gNextId = 101;
+var gMyLocationMarker;
 function initMapPage() {
-    gposs = loadFromStorage('myPos');
+    gPoss = loadFromStorage('myPos') || [];
 }
 function getPosition() {
     if (!navigator.geolocation) {
@@ -9,12 +12,22 @@ function getPosition() {
         return;
     }
     navigator.geolocation.getCurrentPosition(showLocation, handleLocationError);
-
 }
 
 function showLocation(position) {
+    var lat = position.coords.latitude
+    var lng = position.coords.longitude
+    // var isFound = gPoss.some(poss => (poss.lat === lat && poss.lng === lng))
 
-    initMap(position.coords.latitude, position.coords.longitude, 16, 'my pos');
+    gMap.setCenter({ lat, lng })
+    gMyLocationMarker.setMap(null)
+    gMyLocationMarker=new google.maps.Marker({
+        position: { lat, lng },
+        map: gMap
+    });
+    // gMyLocationMarker
+    // gPoss.push({ id: gNextId++, lat, lng, name: 'My Location' });
+    // initMap(position.coords.latitude, position.coords.longitude, 16, 'my pos');
 }
 
 
@@ -37,13 +50,13 @@ function handleLocationError(error) {
     }
 }
 function renderMyPos(map) {
-    var positions = loadFromStorage('myPos');
+    var positions = loadFromStorage('myPos') || [];
     var strHtml = ''
     var markers = []
     var marker;
     positions.forEach(pos => {
         // strHtml += `<li onclick="initMap(${pos.lat},${pos.lng},16,'${pos.name}')">${pos.name}</li>`
-        strHtml += `<div class="card col _card" onclick="initMap(${pos.lat},${pos.lng},16,'${pos.name}')">
+        strHtml += `<div class="card col _card" onclick="goTo(${pos.lat},${pos.lng},12)">
         <div class="card-body">
         ${pos.name}
         </div>
@@ -60,50 +73,60 @@ function renderMyPos(map) {
     elMain.innerHTML = strHtml
 }
 
-function initMap(lat, lng, zoom, markerTitle) {
+function goTo(lat, lng, zoom) {
+    gMap.setCenter({ lat, lng })
+    gMap.setZoom(zoom)
+}
 
-    var elMap = document.querySelector('#map');
+function initMap() {
+    var lat = 29.551242185257177
+    var lng = 34.9431130396543
+    var elMap = document.getElementById('map');
     var options = {
         center: { lat, lng },
-        zoom: zoom
+        zoom: 12
     };
 
-    var map = new google.maps.Map(
+    gMap = new google.maps.Map(
         elMap,
         options
     );
-    renderMyPos(map)
-    var marker = new google.maps.Marker({
+    console.log('gMap:', gMap)
+    renderMyPos(gMap)
+    new google.maps.Marker({
         position: { lat, lng },
-        map,
-        title: markerTitle
+        map: gMap,
+        title: 'Eilat'
     });
-    map.setCenter(new google.maps.LatLng(lat, lng));
-    google.maps.event.addListener(map, 'click', function (event) {
-        mapZoom = map.zoom;
-        startLocation = event.latLng;
-        // map.setCenter(new google.maps.LatLng( startLocation.lat(), startLocation.lng()));
-        var posName = prompt(' enter location name')
-        var marker = new google.maps.Marker({
-            position: { lat: startLocation.lat(), lng: startLocation.lng() },
-            map,
-            title: posName
-        });
-        gposs.push({ id: 123, lat: startLocation.lat(), lng: startLocation.lng(), name: posName });
-        saveToStorage('myPos', gposs)
-        renderMyPos(map)
-        setTimeout(placeMarker, 600);
+    gMap.setCenter(new google.maps.LatLng(lat, lng));
+    gMap.addListener('click', addPlace)
+}
+
+function addPlace(event) {
+    console.log('event:', event)
+    mapZoom = gMap.zoom;
+    startLocation = event.latLng;
+    // map.setCenter(new google.maps.LatLng( startLocation.lat(), startLocation.lng()));
+    var posName = prompt(' enter location name')
+    var marker = new google.maps.Marker({
+        position: { lat: startLocation.lat(), lng: startLocation.lng() },
+        map: gMap,
+        title: posName
     });
+    gPoss.push({ id: gNextId++, lat: startLocation.lat(), lng: startLocation.lng(), name: posName });
+    saveToStorage('myPos', gPoss)
+    renderMyPos(gMap)
+    // setTimeout(placeMarker, 600);
 }
 
-function mapReady() {
-    console.log('Map is ready');
-}
+// function mapReady() {
+//     console.log('Map is ready');
+// }
 
 
 
-function placeMarker() {
-    if (mapZoom == map.zoom) {
-        new google.maps.Marker({ position: location, map: map });
-    }
-}
+// function placeMarker() {
+//     if (mapZoom == map.zoom) {
+//         new google.maps.Marker({ position: location, map: map });
+//     }
+// }
