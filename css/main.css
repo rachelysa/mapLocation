@@ -1,0 +1,25 @@
+._nav{
+    margin-bottom: 10px;
+}
+body{
+    margin: 20px;
+}
+._card:hover{
+    background-color: gainsboro;
+}
+._range{
+    margin-top: 15px;
+}
+._list{
+    margin-bottom: 10px;
+}
+._img{
+    margin-bottom: 10px;
+    border-radius: 10px;
+}
+._h1{
+    position: absolute;
+    text-align: center;
+
+    right: 38%;
+}
